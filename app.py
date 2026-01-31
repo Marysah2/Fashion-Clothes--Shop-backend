@@ -1,11 +1,13 @@
+from flask_migrate import Migrate
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from config import Config
+from models import db
+from models.tokenblacklist import TokenBlacklist
 
-db = SQLAlchemy()
 jwt = JWTManager()
+migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
@@ -13,9 +15,9 @@ def create_app():
     
     db.init_app(app)
     jwt.init_app(app)
+    migrate.init_app(app, db)
     CORS(app)
     
-    # Register blueprints
     from routes.auth import auth_bp
     from routes.products import products_bp
     from routes.cart import cart_bp
@@ -28,10 +30,13 @@ def create_app():
     app.register_blueprint(orders_bp, url_prefix='/api/orders')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        jti = jwt_payload["jti"]
+        return TokenBlacklist.query.filter_by(jti=jti).first() is not None
+    
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)

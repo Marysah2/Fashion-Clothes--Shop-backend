@@ -1,13 +1,16 @@
-# User and Role models for authentication
-# Banai: Implement user registration, login, JWT auth, role-based access control
-
-from app import db
+from . import db
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 class User(db.Model):
-    # TODO: Implement user model fields
-    pass
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), default="customer")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Role(db.Model):
-    # TODO: Implement role model fields
-    pass
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
