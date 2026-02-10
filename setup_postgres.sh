@@ -1,7 +1,7 @@
 #!/bin/bash
 # PostgreSQL Database Setup Script
 
-echo "🔄 Setting up PostgreSQL database..."
+echo " Setting up PostgreSQL database..."
 
 # Check if database exists
 DB_EXISTS=$(psql -U postgres -lqt 2>/dev/null | cut -d \| -f 1 | grep -w fashion_shop_db)
@@ -31,9 +31,9 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO fashion_user
 
 \q
 EOF
-    echo "✅ Database created!"
+    echo " Database created!"
 else
-    echo "ℹ Database already exists, granting permissions..."
+    echo " Database already exists, granting permissions..."
     psql -U postgres -d fashion_shop_db <<EOF
 GRANT ALL ON SCHEMA public TO fashion_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO fashion_user;
@@ -42,4 +42,4 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO fashion_user
 EOF
 fi
 
-echo "✅ PostgreSQL setup complete!"
+echo " PostgreSQL setup complete!"
