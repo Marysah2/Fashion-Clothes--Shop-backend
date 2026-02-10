@@ -14,12 +14,12 @@ def init_database():
     app = create_app('development')
     
     with app.app_context():
-        print("🔄 Creating database tables...")
+        print(" Creating database tables...")
         db.create_all()
-        print("✅ Database tables created successfully!")
+        print(" Database tables created successfully!")
         
         # Create default roles
-        print("\n🔄 Creating default roles...")
+        print("\n Creating default roles...")
         roles_data = [
             {'name': 'admin', 'description': 'Administrator with full access'},
             {'name': 'customer', 'description': 'Regular customer'},
@@ -33,10 +33,10 @@ def init_database():
                 print(f"  ✓ Created role: {role_data['name']}")
         
         db.session.commit()
-        print("✅ Default roles created!")
+        print(" Default roles created!")
         
         # Create admin user
-        print("\n🔄 Creating admin user...")
+        print("\n Creating admin user...")
         admin_email = 'admin@fashion.com'
         if not User.query.filter_by(email=admin_email).first():
             admin = User(
@@ -50,12 +50,12 @@ def init_database():
                 admin.roles.append(admin_role)
             db.session.add(admin)
             db.session.commit()
-            print(f"  ✓ Admin user created: {admin_email} / admin123")
+            print(f"   Admin user created: {admin_email} / admin123")
         else:
-            print(f"  ℹ Admin user already exists: {admin_email}")
+            print(f"   Admin user already exists: {admin_email}")
         
-        print("\n✅ Database initialization complete!")
-        print("\n📊 Database Summary:")
+        print("\n Database initialization complete!")
+        print("\n Database Summary:")
         print(f"  • Users: {User.query.count()}")
         print(f"  • Roles: {Role.query.count()}")
         print(f"  • Categories: {Category.query.count()}")
