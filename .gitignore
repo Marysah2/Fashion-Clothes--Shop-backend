@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Flask / Migrations
+migrations/env.pyc
+migrations/versions/*.pyc
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database dumps
+*.sql
+*.dump
