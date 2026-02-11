@@ -63,6 +63,7 @@ def refresh():
     new_access = create_access_token(identity=identity, expires_delta=timedelta(hours=1))
     return jsonify({"access_token": new_access}), 200
 
+
 @auth_bp.route('/logout', methods=['POST'])
 @jwt_required()
 def logout():

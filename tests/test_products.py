@@ -69,5 +69,6 @@ class TestProducts(unittest.TestCase):
         response = self.client.get('/api/products/images/test.jpg')
         self.assertIn(response.status_code, [200, 404])
 
+
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main([__file__, '-v'])

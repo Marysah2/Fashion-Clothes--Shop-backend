@@ -1,16 +1,32 @@
-# Product catalog routes
-# Kabathi: Implement CRUD for products, categories, image serving, filtering
+"""
+Product catalog routes
+Implements CRUD for products, categories, image serving, filtering
+"""
 
 from flask import Blueprint, request, jsonify, send_from_directory
+
 from models import db
 from models.product import Product, Category
 from utils.decorators import admin_required
 import os
 
+
 products_bp = Blueprint('products', __name__)
+
+# Configuration for image upload
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def slugify(text):
+    """Convert text to URL-friendly slug"""
+    return text.lower().replace(' ', '-').replace('_', '-')
 
 @products_bp.route('/', methods=['GET'])
 def get_products():
+
     category_name = request.args.get('category')
     category_id = request.args.get('category_id', type=int)
     min_price = request.args.get('min_price', type=float)
