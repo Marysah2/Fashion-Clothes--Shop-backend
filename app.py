@@ -6,7 +6,6 @@ from config import Config
 from models import db
 from models.tokenblacklist import TokenBlacklist
 from flasgger import Swagger
-import os
 
 jwt = JWTManager()
 migrate = Migrate()
@@ -22,11 +21,12 @@ def create_app():
     CORS(
         app,
         resources={r"/api/*": {"origins": [
-            os.environ.get("FRONTEND_URL"),
+            "https://fashion-clothes-shop-brown.vercel.app",
             "http://localhost:5173",
             "http://localhost:3000"
         ]}},
-        supports_credentials=True
+        supports_credentials=True,
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     )
 
     from routes.auth import auth_bp
