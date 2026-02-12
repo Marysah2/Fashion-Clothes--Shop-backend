@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, make_response
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
@@ -14,25 +14,10 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Initialize extensions
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
 
-    # CORS setup
-    CORS(
-        app,
-        origins=[
-            "https://fashion-clothes-shop-brown.vercel.app",
-            "http://localhost:5173",
-            "http://localhost:3000"
-        ],
-        supports_credentials=True,
-        allow_headers="*",
-        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    )
-
-    # Register blueprints
     from routes.auth import auth_bp
     from routes.products import products_bp
     from routes.cart import cart_bp
@@ -45,7 +30,25 @@ def create_app():
     app.register_blueprint(orders_bp, url_prefix='/api/orders')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
 
-    # Swagger config
+    CORS(
+        app,
+        resources={r"/*": {"origins": [
+            "https://fashion-clothes-shop-brown.vercel.app",
+            "http://localhost:5173",
+            "http://localhost:3000"
+        ]}},
+        supports_credentials=True
+    )
+
+    @app.before_request
+    def handle_options_requests():
+        if request.method == "OPTIONS":
+            resp = make_response()
+            resp.headers.add("Access-Control-Allow-Origin", request.headers.get("Origin", "*"))
+            resp.headers.add("Access-Control-Allow-Headers", request.headers.get("Access-Control-Request-Headers", "*"))
+            resp.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+            return resp
+
     swagger_config = {
         "headers": [],
         "specs": [{"endpoint": "apispec", "route": "/swagger.json",
@@ -72,10 +75,14 @@ def create_app():
 
     Swagger(app, config=swagger_config, template=swagger_template)
 
-    # JWT token check
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload):
         jti = jwt_payload["jti"]
         return TokenBlacklist.query.filter_by(jti=jti).first() is not None
 
     return app
+
+app = create_app()
+
+if __name__ == '__main__':
+    app.run(debug=True)
