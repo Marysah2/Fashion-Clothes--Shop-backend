@@ -20,7 +20,7 @@ def create_app():
 
     CORS(
         app,
-        resources={r"/api/*": {"origins": [
+        resources={r"/*": {"origins": [
             "https://fashion-clothes-shop-brown.vercel.app",
             "http://localhost:5173",
             "http://localhost:3000"
