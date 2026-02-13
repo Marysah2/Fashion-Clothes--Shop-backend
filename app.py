@@ -17,7 +17,7 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
-
+    
     from routes.auth import auth_bp
     from routes.products import products_bp
     from routes.cart import cart_bp
