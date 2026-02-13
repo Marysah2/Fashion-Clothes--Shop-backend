@@ -71,34 +71,39 @@ def register():
               type: string
               example: "Email and password required"
     """
-    data = request.get_json()
-    email = data.get("email")
-    password = data.get("password")
-    role = data.get("role", "customer")
+    try:
+        data = request.get_json()
+        email = data.get("email")
+        password = data.get("password")
+        role = data.get("role", "customer")
 
-    if not email or not password:
-        return jsonify({"message": "Email and password required"}), 400
+        if not email or not password:
+            return jsonify({"message": "Email and password required"}), 400
 
-    if role not in ["customer", "admin"]:
-        return jsonify({"message": "Invalid role"}), 400
+        if role not in ["customer", "admin"]:
+            return jsonify({"message": "Invalid role"}), 400
 
-    if User.query.filter_by(email=email).first():
-        return jsonify({"message": "User already exists"}), 400
+        if User.query.filter_by(email=email).first():
+            return jsonify({"message": "User already exists"}), 400
 
-    user = User(email=email, role=role)
-    user.set_password(password)
+        user = User(email=email, role=role)
+        user.set_password(password)
 
-    db.session.add(user)
-    db.session.commit()
+        db.session.add(user)
+        db.session.commit()
 
-    access_token = create_access_token(identity={"id": user.id, "role": user.role}, expires_delta=timedelta(hours=1))
-    refresh_token = create_refresh_token(identity={"id": user.id, "role": user.role})
+        access_token = create_access_token(identity={"id": user.id, "role": user.role}, expires_delta=timedelta(hours=1))
+        refresh_token = create_refresh_token(identity={"id": user.id, "role": user.role})
 
-    return jsonify({
-        "user": {"id": user.id, "email": user.email, "role": user.role},
-        "access_token": access_token,
-        "refresh_token": refresh_token
-    }), 201
+        return jsonify({
+            "user": {"id": user.id, "email": user.email, "role": user.role},
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"Registration error: {str(e)}")
+        return jsonify({"message": "Registration failed", "error": str(e)}), 500
 
 
 @auth_bp.route('/login', methods=['POST'])
@@ -159,22 +164,26 @@ def login():
               type: string
               example: "Invalid credentials"
     """
-    data = request.get_json()
-    email = data.get("email")
-    password = data.get("password")
+    try:
+        data = request.get_json()
+        email = data.get("email")
+        password = data.get("password")
 
-    user = User.query.filter_by(email=email).first()
-    if not user or not user.check_password(password):
-        return jsonify({"message": "Invalid credentials"}), 401
+        user = User.query.filter_by(email=email).first()
+        if not user or not user.check_password(password):
+            return jsonify({"message": "Invalid credentials"}), 401
 
-    access_token = create_access_token(identity={"id": user.id, "role": user.role}, expires_delta=timedelta(hours=1))
-    refresh_token = create_refresh_token(identity={"id": user.id, "role": user.role})
+        access_token = create_access_token(identity={"id": user.id, "role": user.role}, expires_delta=timedelta(hours=1))
+        refresh_token = create_refresh_token(identity={"id": user.id, "role": user.role})
 
-    return jsonify({
-        "user": {"id": user.id, "email": user.email, "role": user.role},
-        "access_token": access_token,
-        "refresh_token": refresh_token
-    }), 200
+        return jsonify({
+            "user": {"id": user.id, "email": user.email, "role": user.role},
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }), 200
+    except Exception as e:
+        print(f"Login error: {str(e)}")
+        return jsonify({"message": "Login failed", "error": str(e)}), 500
 
 
 @auth_bp.route('/refresh', methods=['POST'])
