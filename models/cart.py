@@ -4,7 +4,7 @@ Implements cart items, checkout, order creation, payment simulation
 """
 
 from datetime import datetime
-from extensions import db
+from . import db
 
 class Cart(db.Model):
     """Shopping cart model"""

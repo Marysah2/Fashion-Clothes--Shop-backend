@@ -4,7 +4,7 @@ Manages customer orders and order line items
 """
 
 from datetime import datetime
-from extensions import db
+from . import db
 import json
 
 class OrderItem(db.Model):

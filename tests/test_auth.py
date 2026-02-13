@@ -1,14 +1,6 @@
-# Authentication tests
-# Banai: Add Minitest for authentication endpoints
-
 import pytest
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from _init_ import create_app
+from models.user import User
 from extensions import db
-from models.user import User, Role
 
 
 @pytest.fixture
