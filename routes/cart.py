@@ -360,15 +360,15 @@ def checkout():
         user_id = get_jwt_identity()
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         if cart.items.count() == 0:
-            return jsonify({'success': False, 'message': 'Cart is empty'}), 400
+            return jsonify({'success': False, 'message': 'Cart is empty'}), 422
         if not data.get('shipping_address'):
-            return jsonify({'success': False, 'message': 'Shipping address required'}), 400
+            return jsonify({'success': False, 'message': 'Shipping address required'}), 422
 
         cart_items_data = []
         for item in cart.items:
             product = Product.query.get(item.product_id)
             if product:
-                product.stock_quantity -= item.quantity
+                product.stock -= item.quantity
                 cart_items_data.append({
                     'product_id': item.product_id,
                     'product_name': item.product_name,
@@ -392,6 +392,9 @@ def checkout():
         return jsonify({'success': True, 'message': 'Order created successfully', 'data': {'order': order.to_dict()}}), 201
     except Exception as e:
         db.session.rollback()
+        print(f"Checkout error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
