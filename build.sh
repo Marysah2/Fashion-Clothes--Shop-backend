@@ -2,4 +2,4 @@
 set -o errexit
 
 pip install -r requirements.txt
-flask db upgrade
+flask db stamp head || flask db upgrade
