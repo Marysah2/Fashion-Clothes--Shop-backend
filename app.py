@@ -1,4 +1,4 @@
-from flask import Flask, request, make_response
+from flask import Flask
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
@@ -32,25 +32,18 @@ def create_app():
 
     CORS(
         app,
-        resources={r"/*": {"origins": [
+        resources={r"/api/*": {"origins": [
             "https://fashion-clothes-shop-brown.vercel.app",
             "http://localhost:5173",
             "http://localhost:3000"
         ]}},
-        supports_credentials=True
+        supports_credentials=True,
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers="*"
     )
 
-    @app.before_request
-    def handle_options_requests():
-        if request.method == "OPTIONS":
-            resp = make_response()
-            resp.headers.add("Access-Control-Allow-Origin", request.headers.get("Origin", "*"))
-            resp.headers.add("Access-Control-Allow-Headers", request.headers.get("Access-Control-Request-Headers", "*"))
-            resp.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-            return resp
-
     swagger_config = {
-        "headers": [],
+        "headers": [], 
         "specs": [{"endpoint": "apispec", "route": "/swagger.json",
                    "rule_filter": lambda rule: True, "model_filter": lambda tag: True}],
         "static_url_path": "/flasgger_static",
@@ -83,6 +76,3 @@ def create_app():
     return app
 
 app = create_app()
-
-if __name__ == '__main__':
-    app.run(debug=True)
