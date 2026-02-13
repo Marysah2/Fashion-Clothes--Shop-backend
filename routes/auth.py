@@ -184,6 +184,8 @@ def login():
         }), 200
     except Exception as e:
         print(f"Login error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"message": "Login failed", "error": str(e)}), 500
 
 
