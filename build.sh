@@ -7,5 +7,5 @@ pip install -r requirements.txt
 # Only run migrations if needed
 flask db upgrade
 
-# Skip seeding - only seed manually when needed
-# python seed_products.py
+# Seed database with products
+python seed_products.py
