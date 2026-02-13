@@ -110,6 +110,10 @@ def create_app():
 
     Swagger(app, config=swagger_config, template=swagger_template)
 
+    # Register seed command
+    from seed import init_app as init_seed
+    init_seed(app)
+
     # JWT error handlers
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
