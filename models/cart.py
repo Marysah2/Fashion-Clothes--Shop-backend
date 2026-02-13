@@ -98,7 +98,7 @@ class Invoice(db.Model):
     
     # Relationships
     order = db.relationship('Order', backref='invoice')
-    user = db.relationship('User')
+    user = db.relationship('User', foreign_keys=[user_id])
     
     def generate_invoice_number(self):
         """Generate unique invoice number"""
