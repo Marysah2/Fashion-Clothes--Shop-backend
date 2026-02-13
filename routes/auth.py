@@ -93,8 +93,8 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        access_token = create_access_token(identity={"id": user.id, "role": user.role}, expires_delta=timedelta(hours=1))
-        refresh_token = create_refresh_token(identity={"id": user.id, "role": user.role})
+        access_token = create_access_token(identity=user.id, additional_claims={"role": user.role}, expires_delta=timedelta(hours=1))
+        refresh_token = create_refresh_token(identity=user.id, additional_claims={"role": user.role})
 
         return jsonify({
             "user": {"id": user.id, "email": user.email, "role": user.role},
@@ -174,8 +174,8 @@ def login():
         if not user or not user.check_password(password):
             return jsonify({"message": "Invalid credentials"}), 401
 
-        access_token = create_access_token(identity={"id": user.id, "role": user.role}, expires_delta=timedelta(hours=1))
-        refresh_token = create_refresh_token(identity={"id": user.id, "role": user.role})
+        access_token = create_access_token(identity=user.id, additional_claims={"role": user.role}, expires_delta=timedelta(hours=1))
+        refresh_token = create_refresh_token(identity=user.id, additional_claims={"role": user.role})
 
         return jsonify({
             "user": {"id": user.id, "email": user.email, "role": user.role},
@@ -205,8 +205,10 @@ def refresh():
               type: string
               example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
     """
-    identity = get_jwt_identity()
-    new_access = create_access_token(identity=identity, expires_delta=timedelta(hours=1))
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    role = claims.get('role', 'customer')
+    new_access = create_access_token(identity=user_id, additional_claims={"role": role}, expires_delta=timedelta(hours=1))
     return jsonify({"access_token": new_access}), 200
 
 
@@ -282,8 +284,9 @@ def get_users():
               type: string
               example: "Admins only"
     """
-    identity = get_jwt_identity()
-    if identity["role"] != "admin":
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    if claims.get("role") != "admin":
         return jsonify({"message": "Admins only"}), 403
 
     users = User.query.all()

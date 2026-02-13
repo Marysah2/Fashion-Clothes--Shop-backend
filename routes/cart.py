@@ -55,8 +55,7 @@ def get_cart():
               type: string
     """
     try:
-        identity = get_jwt_identity()
-        user_id = identity['id'] if isinstance(identity, dict) else identity
+        user_id = get_jwt_identity()
         cart = get_or_create_cart(user_id)
         return jsonify({'success': True, 'data': cart.to_dict()}), 200
     except Exception as e:
@@ -134,8 +133,7 @@ def add_to_cart():
         if not data.get(field):
             return jsonify({'success': False, 'message': f'{field} is required'}), 400
     try:
-        identity = get_jwt_identity()
-        user_id = identity['id'] if isinstance(identity, dict) else identity
+        user_id = get_jwt_identity()
         cart = get_or_create_cart(user_id)
         product = Product.query.get_or_404(data['product_id'])
 
@@ -243,8 +241,7 @@ def update_cart_item():
     if not data.get('item_id') or data.get('quantity') is None:
         return jsonify({'success': False, 'message': 'item_id and quantity required'}), 400
     try:
-        identity = get_jwt_identity()
-        user_id = identity['id'] if isinstance(identity, dict) else identity
+        user_id = get_jwt_identity()
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         cart_item = CartItem.query.filter_by(id=data['item_id'], cart_id=cart.id).first_or_404()
         product = Product.query.get(cart_item.product_id)
@@ -288,8 +285,7 @@ def remove_from_cart(item_id):
         description: Server error
     """
     try:
-        identity = get_jwt_identity()
-        user_id = identity['id'] if isinstance(identity, dict) else identity
+        user_id = get_jwt_identity()
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         cart_item = CartItem.query.filter_by(id=item_id, cart_id=cart.id).first_or_404()
         db.session.delete(cart_item)
@@ -315,8 +311,7 @@ def clear_cart():
         description: Server error
     """
     try:
-        identity = get_jwt_identity()
-        user_id = identity['id'] if isinstance(identity, dict) else identity
+        user_id = get_jwt_identity()
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         CartItem.query.filter_by(cart_id=cart.id).delete()
         db.session.commit()
@@ -360,8 +355,7 @@ def checkout():
     # (same code as your original checkout function)
     data = request.get_json()
     try:
-        identity = get_jwt_identity()
-        user_id = identity['id'] if isinstance(identity, dict) else identity
+        user_id = get_jwt_identity()
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         if cart.items.count() == 0:
             return jsonify({'success': False, 'message': 'Cart is empty'}), 422
@@ -432,8 +426,7 @@ def simulate_payment():
     """
     data = request.get_json()
     try:
-        identity = get_jwt_identity()
-        user_id = identity['id'] if isinstance(identity, dict) else identity
+        user_id = get_jwt_identity()
         order_id = data.get('order_id')
         if not order_id:
             return jsonify({'success': False, 'message': 'Order ID required'}), 400
@@ -472,8 +465,7 @@ def get_cart_count():
         description: Server error
     """
     try:
-        identity = get_jwt_identity()
-        user_id = identity['id'] if isinstance(identity, dict) else identity
+        user_id = get_jwt_identity()
         cart = Cart.query.filter_by(user_id=user_id).first()
         count = cart.get_item_count() if cart else 0
         return jsonify({'success': True, 'data': {'count': count}}), 200

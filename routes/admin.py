@@ -182,8 +182,7 @@ def delete_user(user_id):
     """
     user = User.query.get_or_404(user_id)
     try:
-        identity = get_jwt_identity()
-        current_user_id = identity['id'] if isinstance(identity, dict) else identity
+        current_user_id = get_jwt_identity()
         if user.id == current_user_id:
             return jsonify({'success': False, 'message': 'Cannot delete your own account'}), 400
         db.session.delete(user)
