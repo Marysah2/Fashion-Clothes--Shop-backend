@@ -55,7 +55,8 @@ def get_cart():
               type: string
     """
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity['id'] if isinstance(identity, dict) else identity
         cart = get_or_create_cart(user_id)
         return jsonify({'success': True, 'data': cart.to_dict()}), 200
     except Exception as e:
@@ -133,16 +134,15 @@ def add_to_cart():
         if not data.get(field):
             return jsonify({'success': False, 'message': f'{field} is required'}), 400
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity['id'] if isinstance(identity, dict) else identity
         cart = get_or_create_cart(user_id)
         product = Product.query.get_or_404(data['product_id'])
 
-        if not product.is_active:
-            return jsonify({'success': False, 'message': 'Product not available'}), 400
-        if product.stock_quantity < data['quantity']:
+        if product.stock < data['quantity']:
             return jsonify({
                 'success': False,
-                'message': f'Only {product.stock_quantity} items available'
+                'message': f'Only {product.stock} items available'
             }), 400
 
         existing_item = CartItem.query.filter_by(
@@ -153,13 +153,13 @@ def add_to_cart():
         ).first()
         if existing_item:
             new_quantity = existing_item.quantity + data['quantity']
-            if new_quantity > product.stock_quantity:
+            if new_quantity > product.stock:
                 return jsonify({
                     'success': False,
-                    'message': f'Cannot add more. Max available: {product.stock_quantity}'
+                    'message': f'Cannot add more. Max available: {product.stock}'
                 }), 400
             existing_item.quantity = new_quantity
-            existing_item.unit_price = float(product.current_price)
+            existing_item.unit_price = float(product.price)
         else:
             cart_item = CartItem(
                 cart_id=cart.id,
@@ -167,7 +167,7 @@ def add_to_cart():
                 product_name=product.name,
                 product_image=product.image_url,
                 quantity=data['quantity'],
-                unit_price=float(product.current_price),
+                unit_price=float(product.price),
                 size=data.get('size'),
                 color=data.get('color')
             )
@@ -243,21 +243,22 @@ def update_cart_item():
     if not data.get('item_id') or data.get('quantity') is None:
         return jsonify({'success': False, 'message': 'item_id and quantity required'}), 400
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity['id'] if isinstance(identity, dict) else identity
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         cart_item = CartItem.query.filter_by(id=data['item_id'], cart_id=cart.id).first_or_404()
         product = Product.query.get(cart_item.product_id)
-        if product and data['quantity'] > product.stock_quantity:
+        if product and data['quantity'] > product.stock:
             return jsonify({
                 'success': False,
-                'message': f'Only {product.stock_quantity} items available'
+                'message': f'Only {product.stock} items available'
             }), 400
 
         if data['quantity'] <= 0:
             db.session.delete(cart_item)
         else:
             cart_item.quantity = data['quantity']
-            cart_item.unit_price = float(product.current_price) if product else cart_item.unit_price
+            cart_item.unit_price = float(product.price) if product else cart_item.unit_price
 
         db.session.commit()
         return jsonify({'success': True, 'message': 'Cart updated', 'data': cart.to_dict()}), 200
@@ -287,7 +288,8 @@ def remove_from_cart(item_id):
         description: Server error
     """
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity['id'] if isinstance(identity, dict) else identity
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         cart_item = CartItem.query.filter_by(id=item_id, cart_id=cart.id).first_or_404()
         db.session.delete(cart_item)
@@ -313,7 +315,8 @@ def clear_cart():
         description: Server error
     """
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity['id'] if isinstance(identity, dict) else identity
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         CartItem.query.filter_by(cart_id=cart.id).delete()
         db.session.commit()
@@ -357,7 +360,8 @@ def checkout():
     # (same code as your original checkout function)
     data = request.get_json()
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity['id'] if isinstance(identity, dict) else identity
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         if cart.items.count() == 0:
             return jsonify({'success': False, 'message': 'Cart is empty'}), 422
@@ -428,7 +432,8 @@ def simulate_payment():
     """
     data = request.get_json()
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity['id'] if isinstance(identity, dict) else identity
         order_id = data.get('order_id')
         if not order_id:
             return jsonify({'success': False, 'message': 'Order ID required'}), 400
@@ -467,7 +472,8 @@ def get_cart_count():
         description: Server error
     """
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity['id'] if isinstance(identity, dict) else identity
         cart = Cart.query.filter_by(user_id=user_id).first()
         count = cart.get_item_count() if cart else 0
         return jsonify({'success': True, 'data': {'count': count}}), 200

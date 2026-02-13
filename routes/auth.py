@@ -228,11 +228,18 @@ def logout():
               type: string
               example: "Logged out successfully"
     """
-    jti = get_jwt()["jti"]
-    blocked_token = TokenBlacklist(jti=jti)
-    db.session.add(blocked_token)
-    db.session.commit()
-    return jsonify({"message": "Logged out successfully"}), 200
+    try:
+        jti = get_jwt()["jti"]
+        blocked_token = TokenBlacklist(jti=jti)
+        db.session.add(blocked_token)
+        db.session.commit()
+        return jsonify({"message": "Logged out successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Logout error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"message": "Logout failed", "error": str(e)}), 500
 
 
 @auth_bp.route('/users', methods=['GET'])

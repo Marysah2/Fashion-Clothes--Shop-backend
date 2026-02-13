@@ -29,7 +29,8 @@ def get_my_orders():
       500:
         description: Server error
     """
-    user_id = get_jwt_identity()
+    identity = get_jwt_identity()
+    user_id = identity['id'] if isinstance(identity, dict) else identity
     try:
         orders = get_user_orders(user_id)
         return jsonify({
@@ -63,7 +64,8 @@ def get_order(order_id):
         description: Server error
     """
     try:
-        user_id = get_jwt_identity()
+        identity = get_jwt_identity()
+        user_id = identity['id'] if isinstance(identity, dict) else identity
         order = Order.query.filter_by(id=order_id, user_id=user_id).first_or_404()
         return jsonify({'success': True, 'data': order.to_dict()}), 200
     except Exception as e:
