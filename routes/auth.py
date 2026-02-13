@@ -233,14 +233,22 @@ def logout():
               example: "Logged out successfully"
     """
     try:
+        import sys
+        print(f"Logout endpoint reached successfully", flush=True)
+        sys.stdout.flush()
         jti = get_jwt()["jti"]
+        user_id = get_jwt_identity()
+        print(f"Logout - User ID: {user_id}, JTI: {jti}", flush=True)
+        sys.stdout.flush()
         blocked_token = TokenBlacklist(jti=jti)
         db.session.add(blocked_token)
         db.session.commit()
         return jsonify({"message": "Logged out successfully"}), 200
     except Exception as e:
         db.session.rollback()
-        print(f"Logout error: {str(e)}")
+        import sys
+        print(f"Logout error: {str(e)}", flush=True)
+        sys.stdout.flush()
         import traceback
         traceback.print_exc()
         return jsonify({"message": "Logout failed", "error": str(e)}), 500

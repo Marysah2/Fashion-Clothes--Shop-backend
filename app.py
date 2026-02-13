@@ -113,19 +113,25 @@ def create_app():
     # JWT error handlers
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
-        print(f"JWT Error: Token expired. Header: {jwt_header}, Payload: {jwt_payload}")
+        import sys
+        print(f"JWT Error: Token expired. Header: {jwt_header}, Payload: {jwt_payload}", flush=True)
+        sys.stdout.flush()
         return {"message": "Token has expired", "error": "token_expired"}, 401
 
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
-        print(f"JWT Error: Invalid token. Error: {str(error)}")
+        import sys
+        print(f"JWT Error: Invalid token. Error: {str(error)}", flush=True)
+        sys.stdout.flush()
         import traceback
         traceback.print_exc()
         return {"message": "Invalid token", "error": "invalid_token", "details": str(error)}, 422
 
     @jwt.unauthorized_loader
     def missing_token_callback(error):
-        print(f"JWT Error: Missing authorization header. Error: {str(error)}")
+        import sys
+        print(f"JWT Error: Missing authorization header. Error: {str(error)}", flush=True)
+        sys.stdout.flush()
         return {"message": "Authorization header missing", "error": "authorization_required", "details": str(error)}, 401
 
     @jwt.revoked_token_loader

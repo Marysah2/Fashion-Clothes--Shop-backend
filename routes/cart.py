@@ -355,7 +355,12 @@ def checkout():
     # (same code as your original checkout function)
     data = request.get_json()
     try:
+        import sys
+        print(f"Checkout endpoint reached successfully", flush=True)
+        sys.stdout.flush()
         user_id = get_jwt_identity()
+        print(f"Checkout - User ID: {user_id}", flush=True)
+        sys.stdout.flush()
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         if cart.items.count() == 0:
             return jsonify({'success': False, 'message': 'Cart is empty'}), 422
