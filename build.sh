@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -o errexit
 
+# Install dependencies (cached by Render)
 pip install -r requirements.txt
-flask db stamp head || flask db upgrade
-python seed_products.py
+
+# Only run migrations if needed
+flask db upgrade
+
+# Skip seeding - only seed manually when needed
+# python seed_products.py
