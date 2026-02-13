@@ -4,7 +4,7 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flasgger import Swagger
 from config import Config
-from models import db
+from extensions import db
 from models.tokenblacklist import TokenBlacklist
 
 jwt = JWTManager()

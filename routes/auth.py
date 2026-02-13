@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from models.user import User, db
+from extensions import db
+from models.user import User
 from models.tokenblacklist import TokenBlacklist
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from datetime import timedelta

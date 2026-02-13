@@ -4,7 +4,7 @@ Implements product/category models, CRUD endpoints, image serving, filtering
 """
 
 from datetime import datetime
-from . import db
+from extensions import db
 
 class Category(db.Model):
     __tablename__ = 'categories'

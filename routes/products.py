@@ -4,7 +4,7 @@ Implements CRUD for products, categories, image serving, filtering
 """
 
 from flask import Blueprint, request, jsonify, send_from_directory
-from models import db
+from extensions import db
 from models.product import Product, Category
 from utils.decorators import admin_required
 import os

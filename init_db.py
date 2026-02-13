@@ -5,7 +5,7 @@ Creates all tables based on your models
 """
 
 from app import create_app
-from models import db
+from extensions import db
 from models.user import User
 from models.product import Product, Category
 
