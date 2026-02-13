@@ -8,4 +8,4 @@ pip install -r requirements.txt
 flask db upgrade
 
 # Seed database with products
-flask seed
+python seed_products.py

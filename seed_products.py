@@ -1,9 +1,13 @@
-from app import create_app
+import os
+import sys
+
+# Set Flask app for CLI
+os.environ['FLASK_APP'] = 'wsgi.py'
+
+from wsgi import app
 from extensions import db
 from models.product import Product, Category
 from models.user import User
-
-app = create_app()
 
 with app.app_context():
     
@@ -13,6 +17,7 @@ with app.app_context():
         admin = User(email='admin@shop.com', role='admin')
         admin.set_password('admin123')
         db.session.add(admin)
+        print('Created admin user')
     
     # Create categories
     categories_data = [
