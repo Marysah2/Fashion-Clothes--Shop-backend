@@ -23,6 +23,21 @@ def create_app():
     jwt.init_app(app)
     migrate.init_app(app, db)
     
+    @app.route('/')
+    def home():
+        return {
+            "message": "Fashion Clothes Shop API",
+            "status": "running",
+            "documentation": "/swagger/",
+            "endpoints": {
+                "auth": "/api/auth",
+                "products": "/api/products",
+                "cart": "/api/cart",
+                "orders": "/api/orders",
+                "admin": "/api/admin"
+            }
+        }
+    
     from routes.auth import auth_bp
     from routes.products import products_bp
     from routes.cart import cart_bp
