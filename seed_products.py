@@ -6,7 +6,6 @@ from models.user import User
 app = create_app()
 
 with app.app_context():
-    db.create_all()
     
     # Create admin user
     admin = User.query.filter_by(email='admin@shop.com').first()
