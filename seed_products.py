@@ -1,4 +1,5 @@
-from app import create_app, db
+from app import create_app
+from extensions import db
 from models.product import Product, Category
 from models.user import User
 
