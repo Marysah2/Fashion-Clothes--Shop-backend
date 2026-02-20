@@ -366,6 +366,13 @@ def checkout():
             return jsonify({'success': False, 'message': 'Cart is empty'}), 422
         if not data.get('shipping_address'):
             return jsonify({'success': False, 'message': 'Shipping address required'}), 422
+        
+        # Validate M-Pesa payment
+        payment_method = data.get('payment_method', 'online')
+        if payment_method == 'mpesa':
+            phone_number = data.get('phone_number', '').strip()
+            if not phone_number:
+                return jsonify({'success': False, 'message': 'Phone number required for M-Pesa payment'}), 400
 
         cart_items_data = []
         for item in cart.items:
@@ -385,7 +392,7 @@ def checkout():
             user_id=user_id,
             cart_items=cart_items_data,
             shipping_address=data['shipping_address'],
-            payment_method=data.get('payment_method', 'online')
+            payment_method=payment_method
         )
         db.session.add(order)
         db.session.flush()
