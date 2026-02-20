@@ -364,14 +364,15 @@ def checkout():
         cart = Cart.query.filter_by(user_id=user_id).first_or_404()
         if cart.items.count() == 0:
             return jsonify({'success': False, 'message': 'Cart is empty'}), 422
-        
-        shipping_address = data.get('shipping_address')
-        if not shipping_address:
+        if not data.get('shipping_address'):
             return jsonify({'success': False, 'message': 'Shipping address required'}), 422
         
-        # Convert shipping_address to string if it's a dict
-        if isinstance(shipping_address, dict):
-            shipping_address = shipping_address.get('address') or str(shipping_address)
+        # Validate M-Pesa payment
+        payment_method = data.get('payment_method', 'online')
+        if payment_method == 'mpesa':
+            phone_number = data.get('phone_number', '').strip()
+            if not phone_number:
+                return jsonify({'success': False, 'message': 'Phone number required for M-Pesa payment'}), 400
 
         cart_items_data = []
         for item in cart.items:
@@ -390,8 +391,8 @@ def checkout():
         order = Order.create_from_cart(
             user_id=user_id,
             cart_items=cart_items_data,
-            shipping_address=shipping_address,
-            payment_method=data.get('payment_method', 'online')
+            shipping_address=data['shipping_address'],
+            payment_method=payment_method
         )
         db.session.add(order)
         db.session.flush()
@@ -405,90 +406,6 @@ def checkout():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500
-
-
-@cart_bp.route('/payment/mpesa', methods=['POST'])
-@jwt_required()
-def mpesa_payment():
-    """
-    Initiate M-Pesa STK Push
-    ---
-    tags:
-      - Cart
-    parameters:
-      - in: body
-        name: payment
-        required: true
-        schema:
-          type: object
-          required:
-            - order_id
-            - phone_number
-          properties:
-            order_id:
-              type: integer
-              example: 1
-            phone_number:
-              type: string
-              example: "254712345678"
-    responses:
-      200:
-        description: STK Push initiated
-      400:
-        description: Invalid request
-      500:
-        description: Server error
-    """
-    data = request.get_json()
-    try:
-        user_id = get_jwt_identity()
-        order_id = data.get('order_id')
-        phone_number = data.get('phone_number')
-        
-        if not order_id or not phone_number:
-            return jsonify({'success': False, 'message': 'Order ID and phone number required'}), 400
-        
-        order = Order.query.filter_by(id=order_id, user_id=user_id).first_or_404()
-        
-        from services.mpesa_service import MpesaService
-        mpesa = MpesaService()
-        result = mpesa.stk_push(
-            phone_number=phone_number,
-            amount=order.total_amount,
-            account_reference=f'Order-{order.id}',
-            transaction_desc=f'Payment for Order #{order.id}'
-        )
-        
-        if result.get('ResponseCode') == '0':
-            order.payment_status = 'paid'
-            order.status = 'processing'
-            db.session.commit()
-            return jsonify({
-                'success': True,
-                'message': 'Order accepted! Payment successful',
-                'data': {
-                    'checkout_request_id': result.get('CheckoutRequestID'),
-                    'order': order.to_dict()
-                }
-            }), 200
-        else:
-            return jsonify({
-                'success': False,
-                'message': 'Order accepted! Payment pending'
-            }), 200
-            
-    except Exception as e:
-        order = Order.query.filter_by(id=order_id, user_id=user_id).first()
-        if order:
-            order.payment_status = 'pending'
-            order.status = 'processing'
-            db.session.commit()
-            return jsonify({
-                'success': True,
-                'message': 'Order accepted! Payment will be processed',
-                'data': {'order': order.to_dict()}
-            }), 200
-        return jsonify({'success': True, 'message': 'Order accepted!'}), 200
 
 
 @cart_bp.route('/payment/simulate', methods=['POST'])
