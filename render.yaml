@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: fashion-shop-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fashion-shop-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+
+databases:
+  - name: fashion-shop-db
+    databaseName: fashion_shop_db
+    user: fashion_user

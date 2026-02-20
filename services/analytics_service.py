@@ -1,20 +1,24 @@
 from datetime import datetime, timedelta
 from sqlalchemy import func, cast, Numeric, extract, text
-from sqlalchemy.dialects.postgresql import JSONB
 from extensions import db
 from models.order import Order
+import json
 
 def get_admin_analytics():
-    """Generate comprehensive analytics using PostgreSQL aggregations"""
+    """Generate comprehensive analytics compatible with SQLite and PostgreSQL"""
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     
     # ===== 1. SUMMARY STATISTICS =====
     summary = db.session.query(
         func.count(Order.id).label('total_orders'),
         func.coalesce(func.sum(Order.total_amount), 0).label('total_revenue'),
-        func.coalesce(func.avg(Order.total_amount), 0).label('avg_order_value'),
-        func.sum(func.cast(Order.status == 'pending', db.Integer)).label('pending_orders')
+        func.coalesce(func.avg(Order.total_amount), 0).label('avg_order_value')
     ).filter(Order.created_at >= thirty_days_ago).first()
+    
+    pending_count = Order.query.filter(
+        Order.created_at >= thirty_days_ago,
+        Order.status == 'pending'
+    ).count()
     
     # ===== 2. ORDERS TREND (Last 30 days) =====
     orders_trend = db.session.query(
@@ -48,22 +52,18 @@ def get_admin_analytics():
         Order.created_at >= thirty_days_ago
     ).group_by(Order.status).all()
     
-    # ===== 5. CATEGORY-LEVEL STATISTICS (Using JSONB aggregation) =====
-    # CRITICAL: Requires items JSONB to contain 'category_name' field
-    category_stats = db.session.execute(
-        text("""
-        SELECT 
-            elem->>'category_name' AS category,
-            COUNT(*) AS order_count,
-            SUM((elem->>'price')::numeric * (elem->>'quantity')::numeric) AS total_revenue
-        FROM orders o
-        CROSS JOIN LATERAL jsonb_array_elements(o.items) AS elem
-        WHERE o.created_at >= :thirty_days_ago
-        GROUP BY elem->>'category_name'
-        ORDER BY total_revenue DESC
-        """),
-        {'thirty_days_ago': thirty_days_ago}
-    ).fetchall()
+    # ===== 5. CATEGORY-LEVEL STATISTICS (Python-based for SQLite compatibility) =====
+    orders = Order.query.filter(Order.created_at >= thirty_days_ago).all()
+    category_stats = {}
+    
+    for order in orders:
+        items = json.loads(order.items) if isinstance(order.items, str) else order.items
+        for item in items:
+            category = item.get('category_name', 'Uncategorized')
+            if category not in category_stats:
+                category_stats[category] = {'count': 0, 'revenue': 0}
+            category_stats[category]['count'] += 1
+            category_stats[category]['revenue'] += float(item.get('price', 0)) * int(item.get('quantity', 0))
     
     # Format results for frontend
     return {
@@ -71,7 +71,7 @@ def get_admin_analytics():
             'totalOrders': int(summary.total_orders),
             'totalRevenue': float(summary.total_revenue),
             'avgOrderValue': float(round(summary.avg_order_value, 2)),
-            'pendingOrders': int(summary.pending_orders or 0)
+            'pendingOrders': pending_count
         },
         'ordersTrend': [
             {'date': str(r.date), 'count': r.count} 
@@ -86,12 +86,8 @@ def get_admin_analytics():
             for r in status_dist
         ],
         'categoryStatistics': [
-            {
-                'category': r.category, 
-                'count': int(r.order_count),
-                'revenue': float(r.total_revenue)
-            } 
-            for r in category_stats if r.category
+            {'category': cat, 'count': stats['count'], 'revenue': stats['revenue']}
+            for cat, stats in sorted(category_stats.items(), key=lambda x: x[1]['revenue'], reverse=True)
         ]
     }
 

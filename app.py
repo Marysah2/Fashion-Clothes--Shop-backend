@@ -173,14 +173,10 @@ def create_app():
 
     CORS(
         app,
-        resources={r"/api/*": {"origins": [
-            "https://fashion-clothes-shop-brown.vercel.app",
-            "http://localhost:5173",
-            "http://localhost:3000"
-        ]}},
+        resources={r"/api/*": {"origins": "*"}},
         supports_credentials=True,
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers="*"
+        allow_headers=["Content-Type", "Authorization"]
     )
 
     swagger_config = {
